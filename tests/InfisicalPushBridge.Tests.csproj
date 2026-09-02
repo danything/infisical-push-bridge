@@ -7,6 +7,10 @@
     <!-- xUnit v3 単体構成。テストプロジェクト自体が実行ファイルになるので、
          Microsoft.NET.Test.Sdk も VSTest ランナーも要らない -->
     <OutputType>Exe</OutputType>
+    <!-- 実行基盤は Microsoft.Testing.Platform（xUnit ネイティブランナーではなく）。
+         dotnet test の新しい MTP モードとも噛み合う -->
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit.v3" Version="3.2.2" />
