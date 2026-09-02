@@ -13,6 +13,7 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
-      - run: dotnet test tests/InfisicalPushBridge.Tests.csproj
+      # xUnit v3 はテストプロジェクト自体が実行ファイル
+      - run: dotnet run --project tests/InfisicalPushBridge.Tests.csproj
       - name: Helm lint
         run: helm lint charts/infisical-push-bridge
