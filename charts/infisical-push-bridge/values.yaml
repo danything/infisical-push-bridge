@@ -1,0 +1,27 @@
+image:
+  repository: ghcr.io/danything/infisical-push-bridge
+  # 省略時は Chart の appVersion（= ビルドしたコミット SHA）
+  tag: ""
+
+# Webhook の署名検証キー（Infisical の Webhook 設定に入れた secret key と同じ値）を
+# 持つ Secret。キー名は webhook-secret。
+existingSecret: infisical-push-bridge
+
+# 署名キーの Secret 自体を Infisical から引く InfisicalSecret CR を一緒に作る場合。
+# 無効なら existingSecret を別の手段で用意すること。
+infisicalSecret:
+  enabled: false
+  hostAPI: ""            # 例: http://infisical.infisical.svc:8080/api
+  identityId: ""
+  serviceAccountName: ""      # Kubernetes 認証に使う SA
+  serviceAccountNamespace: ""
+  projectSlug: ""
+  envSlug: prod
+  secretsPath: ""        # 例: /infisical-push-bridge/infisical-push-bridge
+
+resources:
+  requests:
+    cpu: 5m
+    memory: 16Mi
+  limits:
+    memory: 64Mi

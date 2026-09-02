@@ -1,0 +1,13 @@
+apiVersion: v2
+name: infisical-push-bridge
+description: >-
+  Turns Infisical webhooks into instant InfisicalSecret reconciliation.
+  Self-hosted Infisical (free tier) only supports polling; this bridge closes
+  the gap by annotating matching InfisicalSecret CRs the moment a secret changes.
+type: application
+# version / appVersion は CI が上書きする（helm package --version/--app-version）
+version: 0.1.0
+appVersion: dev
+home: https://github.com/danything/infisical-push-bridge
+sources:
+  - https://github.com/danything/infisical-push-bridge
