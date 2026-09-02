@@ -49,8 +49,12 @@ k3s の helm-controller なら `HelmChart` CR で同じことができる(`value
    (operator 経由でブリッジの `WEBHOOK_SECRET` になる)
 3. プロジェクト → **Project Settings → Webhooks** → General で作成:
    - URL: `http://infisical-push-bridge.infisical-push-bridge.svc.cluster.local`
-   - Environment: 対象環境(例 `prod`)、パスは絞らない
+   - Environment: 対象環境(例 `prod`)
+   - **Secret Path: `/**`** — Infisical の突き合わせは picomatch のグロブで、
+     UI が既定で入れる `/` は「ルートそのもの」にしかマッチしない。
+     全パスで発火させるにはグロブが必須(実測で確認済み)
    - Secret key: 1. で作った値
+   - イベントは Secret Modified だけでよい
 
 ## 動作の判定
 
