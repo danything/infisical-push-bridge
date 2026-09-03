@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using InfisicalPushBridge;
-using Xunit;
+using System.Threading.Tasks;
 
 public class SignatureTests
 {
@@ -13,46 +13,46 @@ public class SignatureTests
 
     const string Body = """{"event":"secrets.modified","timestamp":1700000000000}""";
 
-    [Fact]
-    public void 正しい署名を受け入れる()
+    [Test]
+    public async Task 正しい署名を受け入れる()
     {
         var now = 1700000000000L;
         var header = Sign(Body, "sekret", now);
-        Assert.True(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "sekret", now));
+        await Assert.That(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "sekret", now)).IsTrue();
     }
 
-    [Fact]
-    public void 鍵が違えば拒否する()
+    [Test]
+    public async Task 鍵が違えば拒否する()
     {
         var now = 1700000000000L;
         var header = Sign(Body, "sekret", now);
-        Assert.False(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "another", now));
+        await Assert.That(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "another", now)).IsFalse();
     }
 
-    [Fact]
-    public void ボディが1バイトでも違えば拒否する()
+    [Test]
+    public async Task ボディが1バイトでも違えば拒否する()
     {
         var now = 1700000000000L;
         var header = Sign(Body, "sekret", now);
-        Assert.False(Signature.Verify(header, Encoding.UTF8.GetBytes(Body + " "), "sekret", now));
+        await Assert.That(Signature.Verify(header, Encoding.UTF8.GetBytes(Body + " "), "sekret", now)).IsFalse();
     }
 
-    [Fact]
-    public void 古すぎるタイムスタンプは正しい署名でも拒否する()
+    [Test]
+    public async Task 古すぎるタイムスタンプは正しい署名でも拒否する()
     {
         var then = 1700000000000L;
         var header = Sign(Body, "sekret", then);
-        Assert.False(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "sekret", then + Signature.ToleranceMs + 1));
+        await Assert.That(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "sekret", then + Signature.ToleranceMs + 1)).IsFalse();
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("garbage")]
-    [InlineData("t=abc;deadbeef")]
-    [InlineData("t=1700000000000")]
-    public void 形式が壊れていれば拒否する(string? header)
+    [Test]
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments("garbage")]
+    [Arguments("t=abc;deadbeef")]
+    [Arguments("t=1700000000000")]
+    public async Task 形式が壊れていれば拒否する(string? header)
     {
-        Assert.False(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "sekret", 1700000000000L));
+        await Assert.That(Signature.Verify(header, Encoding.UTF8.GetBytes(Body), "sekret", 1700000000000L)).IsFalse();
     }
 }

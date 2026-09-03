@@ -4,16 +4,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <!-- xUnit v3 単体構成。テストプロジェクト自体が実行ファイルになるので、
-         Microsoft.NET.Test.Sdk も VSTest ランナーも要らない -->
+    <!-- TUnit。テストプロジェクト自体が実行ファイル(Microsoft.Testing.Platform)なので
+         Microsoft.NET.Test.Sdk も VSTest ランナーも要らない。dotnet run で走る -->
     <OutputType>Exe</OutputType>
-    <!-- 実行基盤は Microsoft.Testing.Platform（xUnit ネイティブランナーではなく）。
-         dotnet test の新しい MTP モードとも噛み合う -->
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="TUnit" Version="1.65.68" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../src/InfisicalPushBridge.csproj" />

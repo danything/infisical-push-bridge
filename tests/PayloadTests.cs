@@ -1,31 +1,31 @@
 using System.Text;
 using InfisicalPushBridge;
-using Xunit;
+using System.Threading.Tasks;
 
 public class PayloadTests
 {
-    [Fact]
-    public void 本物のイベントから環境とパスを取り出す()
+    [Test]
+    public async Task 本物のイベントから環境とパスを取り出す()
     {
         var body = """{"event":"secrets.modified","project":{"workspaceId":"x","environment":"prod","secretPath":"/worklog/worklog-secrets"},"timestamp":1}""";
         var (env, path) = Payload.ExtractScope(Encoding.UTF8.GetBytes(body));
-        Assert.Equal("prod", env);
-        Assert.Equal("/worklog/worklog-secrets", path);
+        await Assert.That(env).IsEqualTo("prod");
+        await Assert.That(path).IsEqualTo("/worklog/worklog-secrets");
     }
 
-    [Fact]
-    public void environmentがオブジェクトの版でもslugを拾う()
+    [Test]
+    public async Task environmentがオブジェクトの版でもslugを拾う()
     {
         var body = """{"project":{"environment":{"slug":"prod"},"secretPath":"/a"}}""";
         var (env, path) = Payload.ExtractScope(Encoding.UTF8.GetBytes(body));
-        Assert.Equal("prod", env);
-        Assert.Equal("/a", path);
+        await Assert.That(env).IsEqualTo("prod");
+        await Assert.That(path).IsEqualTo("/a");
     }
 
-    [Fact]
-    public void 形が想定外ならnullを返す_呼び出し側は全CR対象に倒す()
+    [Test]
+    public async Task 形が想定外ならnullを返す_呼び出し側は全CR対象に倒す()
     {
-        Assert.Equal((null, null), Payload.ExtractScope(Encoding.UTF8.GetBytes("""{"event":"test"}""")));
-        Assert.Equal((null, null), Payload.ExtractScope(Encoding.UTF8.GetBytes("not json")));
+        await Assert.That(Payload.ExtractScope(Encoding.UTF8.GetBytes("""{"event":"test"}"""))).IsEqualTo((null, null));
+        await Assert.That(Payload.ExtractScope(Encoding.UTF8.GetBytes("not json"))).IsEqualTo((null, null));
     }
 }
