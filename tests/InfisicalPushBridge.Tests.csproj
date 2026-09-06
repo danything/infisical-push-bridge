@@ -9,7 +9,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="1.66.10" />
+    <PackageReference Include="TUnit" Version="1.66.16" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../src/InfisicalPushBridge.csproj" />
