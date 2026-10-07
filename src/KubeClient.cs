@@ -4,7 +4,14 @@ using System.Text.Json;
 
 namespace InfisicalPushBridge;
 
-public readonly record struct Target(string Namespace, string Name, string EnvSlug, string SecretsPath, bool Recursive);
+/// <summary>
+/// InfisicalSecret CR のうち、ブリッジが使う部分だけ。
+/// <c>ProjectSlug</c> と <c>References</c>(<see cref="Provisioning.ReferencesAnnotation"/> 注釈の生の値)は
+/// フォルダの自動作成と参照の自動投入にだけ使う。
+/// </summary>
+public readonly record struct Target(
+    string Namespace, string Name, string EnvSlug, string SecretsPath, bool Recursive,
+    string ProjectSlug = "", string? References = null);
 
 /// <summary>
 /// クラスタ内から k8s API を叩く最小クライアント。
@@ -13,7 +20,7 @@ public readonly record struct Target(string Namespace, string Name, string EnvSl
 /// </summary>
 public sealed class KubeClient
 {
-    const string SaDir = "/var/run/secrets/kubernetes.io/serviceaccount";
+    public const string SaDir = "/var/run/secrets/kubernetes.io/serviceaccount";
     const string ApiGroup = "apis/secrets.infisical.com/v1alpha1";
 
     readonly HttpClient _http;
@@ -83,12 +90,19 @@ public sealed class KubeClient
                 if (method.Value.ValueKind != JsonValueKind.Object) continue;
                 if (!method.Value.TryGetProperty("secretsScope", out var scope)) continue;
 
+                string? references = null;
+                if (meta.TryGetProperty("annotations", out var ann) && ann.ValueKind == JsonValueKind.Object &&
+                    ann.TryGetProperty(Provisioning.ReferencesAnnotation, out var refs) && refs.ValueKind == JsonValueKind.String)
+                    references = refs.GetString();
+
                 targets.Add(new Target(
                     meta.GetProperty("namespace").GetString()!,
                     meta.GetProperty("name").GetString()!,
                     scope.TryGetProperty("envSlug", out var env) ? env.GetString() ?? "" : "",
                     scope.TryGetProperty("secretsPath", out var p) ? p.GetString() ?? "/" : "/",
-                    scope.TryGetProperty("recursive", out var r) && r.ValueKind == JsonValueKind.True));
+                    scope.TryGetProperty("recursive", out var r) && r.ValueKind == JsonValueKind.True,
+                    scope.TryGetProperty("projectSlug", out var slug) ? slug.GetString() ?? "" : "",
+                    references));
                 break;
             }
         }

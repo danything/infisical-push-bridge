@@ -28,6 +28,41 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.existingSecret }}
                   key: webhook-secret
+            {{- with .Values.provision }}
+            {{- if .enabled }}
+            - name: PROVISION_ENABLED
+              value: "true"
+            - name: INFISICAL_API_URL
+              value: {{ required "provision.apiURL is required" .apiURL | quote }}
+            - name: INFISICAL_PROJECT_ID
+              value: {{ required "provision.projectId is required" .projectId | quote }}
+            - name: INFISICAL_PROJECT_SLUG
+              value: {{ required "provision.projectSlug is required" .projectSlug | quote }}
+            - name: PROVISION_POLL_SECONDS
+              value: {{ .pollSeconds | quote }}
+            - name: PROVISION_RESYNC_SECONDS
+              value: {{ .resyncSeconds | quote }}
+            - name: INFISICAL_AUTH_METHOD
+              value: {{ .auth.method | quote }}
+            {{- if eq .auth.method "universal" }}
+            - name: INFISICAL_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .auth.universalSecret | default $.Values.existingSecret }}
+                  key: client-id
+            - name: INFISICAL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .auth.universalSecret | default $.Values.existingSecret }}
+                  key: client-secret
+            {{- else if eq .auth.method "kubernetes" }}
+            - name: INFISICAL_IDENTITY_ID
+              value: {{ required "provision.auth.identityId is required" .auth.identityId | quote }}
+            {{- else }}
+            {{- fail "provision.auth.method must be kubernetes or universal" }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
           readinessProbe:
             httpGet: { path: /healthz, port: 8080 }
           livenessProbe:

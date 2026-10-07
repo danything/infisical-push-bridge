@@ -23,4 +23,19 @@ public class KubeClientTests
         await Assert.That(targets[0]).IsEqualTo(new Target("worklog", "worklog-secrets", "prod", "/worklog/worklog-secrets", false));
         await Assert.That(targets[1]).IsEqualTo(new Target("a", "ua", "prod", "/a/a", true));
     }
+
+    [Test]
+    public async Task projectSlugとreferences注釈も拾う()
+    {
+        var json = """
+        {"items":[
+          {"metadata":{"namespace":"matrix","name":"matrix",
+                       "annotations":{"push-bridge.doany.io/references":"k=/shared/a/k","other":"x"}},
+           "spec":{"authentication":{"kubernetesAuth":{"secretsScope":{"projectSlug":"doa","envSlug":"prod","secretsPath":"/matrix/matrix"}}}}}
+        ]}
+        """;
+        var t = KubeClient.ParseList(Encoding.UTF8.GetBytes(json)).Single();
+        await Assert.That(t.ProjectSlug).IsEqualTo("doa");
+        await Assert.That(t.References).IsEqualTo("k=/shared/a/k");
+    }
 }

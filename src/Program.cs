@@ -8,8 +8,44 @@ if (string.IsNullOrEmpty(secretKey))
 }
 
 var builder = WebApplication.CreateSlimBuilder(args);
-var app = builder.Build();
 var kube = new KubeClient();
+
+// フォルダの自動作成と参照の自動投入(既定は無効)。Infisical に書けるアイデンティティが要る
+if (Environment.GetEnvironmentVariable("PROVISION_ENABLED") == "true")
+{
+    string Need(string name)
+    {
+        var v = Environment.GetEnvironmentVariable(name);
+        if (!string.IsNullOrEmpty(v)) return v;
+        Console.Error.WriteLine($"PROVISION_ENABLED=true なのに {name} が未設定です。");
+        Environment.Exit(1);
+        return "";
+    }
+    string? Opt(string name) => Environment.GetEnvironmentVariable(name) is { Length: > 0 } v ? v : null;
+    int Seconds(string name, int fallback) => int.TryParse(Opt(name), out var s) && s > 0 ? s : fallback;
+
+    var method = Opt("INFISICAL_AUTH_METHOD") ?? "kubernetes";
+    if (method is not ("kubernetes" or "universal"))
+    {
+        Console.Error.WriteLine($"INFISICAL_AUTH_METHOD は kubernetes か universal です(今: {method})。");
+        Environment.Exit(1);
+    }
+    var options = new InfisicalOptions(
+        Need("INFISICAL_API_URL"),
+        Need("INFISICAL_PROJECT_ID"),
+        method,
+        method == "kubernetes" ? Need("INFISICAL_IDENTITY_ID") : null,
+        Opt("INFISICAL_TOKEN_PATH") ?? Path.Combine(KubeClient.SaDir, "token"),
+        method == "universal" ? Need("INFISICAL_CLIENT_ID") : null,
+        method == "universal" ? Need("INFISICAL_CLIENT_SECRET") : null);
+
+    var provisioner = new Provisioner(new InfisicalClient(options), Need("INFISICAL_PROJECT_SLUG"), Console.WriteLine);
+    builder.Services.AddHostedService(_ => new ProvisionLoop(kube, provisioner,
+        TimeSpan.FromSeconds(Seconds("PROVISION_POLL_SECONDS", 30)),
+        TimeSpan.FromSeconds(Seconds("PROVISION_RESYNC_SECONDS", 600))));
+}
+
+var app = builder.Build();
 
 app.MapGet("/healthz", () => Results.Text("ok"));
 

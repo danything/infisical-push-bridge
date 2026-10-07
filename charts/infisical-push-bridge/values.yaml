@@ -19,6 +19,26 @@ infisicalSecret:
   envSlug: prod
   secretsPath: ""        # 例: /infisical-push-bridge/infisical-push-bridge
 
+# フォルダの自動作成と、ほかの値を引き継ぐ参照の自動投入(README「フォルダと参照の自動作成」)。
+# 既定は無効。有効にするにはブリッジ専用の Infisical マシンアイデンティティが要る
+# (operator の読み取り用アイデンティティとは別。README の手順で作る)。
+provision:
+  enabled: false
+  apiURL: ""             # 例: http://infisical.infisical.svc:8080/api
+  projectId: ""          # Infisical の API はプロジェクトを ID で受ける
+  projectSlug: ""        # この slug を指す InfisicalSecret だけを扱う(ほかのプロジェクトは触らない)
+  pollSeconds: 30        # InfisicalSecret の一覧を見る間隔(新しい CR・変わった CR を拾う)
+  resyncSeconds: 600     # 全 CR をやり直す間隔(手で消したキーの補充や、失敗の再試行)
+  auth:
+    method: kubernetes   # kubernetes | universal
+    # kubernetes: ブリッジ自身の ServiceAccount のトークンでログインする
+    identityId: ""
+    # Infisical は提示されたトークン自身で TokenReview を呼ぶ(Infisical 側に token reviewer JWT を
+    # 置かない構成)。そのため SA に system:auth-delegator が要る。reviewer JWT を置いたなら false でよい
+    authDelegator: true
+    # universal: client-id / client-secret のキーを持つ Secret(省略時は existingSecret)
+    universalSecret: ""
+
 resources:
   requests:
     cpu: 5m

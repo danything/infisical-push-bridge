@@ -26,3 +26,21 @@ subjects:
   - kind: ServiceAccount
     name: {{ .Release.Name }}
     namespace: {{ .Release.Namespace }}
+{{- if and .Values.provision.enabled (eq .Values.provision.auth.method "kubernetes") .Values.provision.auth.authDelegator }}
+---
+# provision を Kubernetes 認証で使うときだけ。Infisical はブリッジが提示した SA トークン自身で
+# TokenReview を呼んで本物か確かめるので、この SA に tokenreviews の create が要る
+# (operator の infisical-auth と同じ形)。Secret を読む権限は含まない。
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Release.Name }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
